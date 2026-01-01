@@ -1,41 +1,49 @@
 import dotenv from 'dotenv'
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI ,SchemaType} from "@google/generative-ai";
 dotenv.config()
 
-// Initialize the SDK with your API Key
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-export const getStructuredResponse = async (userInput) => {
-    console.log("GEMINI SERVICE CALLED WITH:", userInput);
+// Define a strict schema for the AI to follow
+const schema = {
+    description: "Asset management intent extraction",
+    type: SchemaType.OBJECT,
+    properties: {
+        intent: {
+            type: SchemaType.STRING,
+            description: "The user's goal",
+            enum: ["find_asset", "list_all", "maintenance_report", "unknown"],
+        },
+        searchTerm: {
+            type: SchemaType.STRING,
+            description: "The name or model of the asset (e.g., 'Dell', 'Printer')",
+            nullable: true,
+        },
+        assetId: {
+            type: SchemaType.NUMBER,
+            description: "The numeric ID if mentioned",
+            nullable: true,
+        },
+    },
+    required: ["intent"],
+};
 
-    // Use gemini-2.5-flash for speed and efficiency in JSON tasks
+export const getStructuredResponse = async (userInput) => {
     const model = genAI.getGenerativeModel({
-        model: "gemini-2.5-flash", // Use the current stable Flash model
-        generationConfig: { responseMimeType: "application/json" }
+        model: "gemini-2.5-flash", //  the latest  stable model
+        generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: schema,
+        }
     });
 
-    const prompt = `
-        You are an assistant that converts user queries into JSON. 
-        Return ONLY valid JSON.
-
-        Convert this query into JSON: "${userInput}"
-
-        JSON format:
-        {
-            "intent": "asset_query | workflow_help | unknown",
-            "assetId": number | null
-        }
-    `;
+    const prompt = `Analyze this user request for an IT asset system: "${userInput}"`;
 
     try {
         const result = await model.generateContent(prompt);
-        const response = result.response;
-        const text = response.text();
-
-        console.log("AI RESPONSE:", text);
-        return text; // This will be a stringified JSON
+        return JSON.parse(result.response.text());
     } catch (error) {
-        console.error('Error fetching Gemini response:', error.message);
+        console.error('AI Error:', error);
         return null;
     }
 }
