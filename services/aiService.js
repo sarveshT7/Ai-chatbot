@@ -1,4 +1,3 @@
-import axios from 'axios'
 import dotenv from 'dotenv'
 import { GoogleGenerativeAI } from "@google/generative-ai";
 dotenv.config()
@@ -9,13 +8,10 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 export const getStructuredResponse = async (userInput) => {
     console.log("GEMINI SERVICE CALLED WITH:", userInput);
 
-    // Use gemini-1.5-flash for speed and efficiency in JSON tasks
+    // Use gemini-2.5-flash for speed and efficiency in JSON tasks
     const model = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
-        // Force the model to output a valid JSON object
-        generationConfig: {
-            responseMimeType: "application/json",
-        }
+        model: "gemini-2.5-flash", // Use the current stable Flash model
+        generationConfig: { responseMimeType: "application/json" }
     });
 
     const prompt = `
@@ -33,7 +29,7 @@ export const getStructuredResponse = async (userInput) => {
 
     try {
         const result = await model.generateContent(prompt);
-        const response = await result.response;
+        const response = result.response;
         const text = response.text();
 
         console.log("AI RESPONSE:", text);

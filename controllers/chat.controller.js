@@ -18,7 +18,7 @@ export const chatController = async (req, res, next) => {
             const asset = assets.find(a => a.id === parsedRes.assetId);
             if (!asset) return res.status(400).json({ reply: `No asset found with ID ${parsedRes.assetId}` });
             return res.status(200).json({
-                reply: `Asset Details:\nName: ${asset.name}\n Status: ${asset.status}\n Owner: ${asset.owner}`
+                reply: `Asset Details:  Name: ${asset.name} Status: ${asset.status} Owner: ${asset.owner}`
             });
         }
         return res.json({ reply: "I can help with asset-related queries only." });
